@@ -2,7 +2,8 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import db from "./db/index.js";
-import userModel from "./models/user-model.js";
+import { registrValidation } from "./validations/user-validation.js";
+import { registr } from "./controllers/user-controller.js";
 
 const app = express();
 const apiPort = 4444;
@@ -11,11 +12,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 
+// Роуты будут перенесены в user-router.js
+// Регистрация с предварительной валидацией данных запроса
+app.post("/registr", registrValidation, registr);
+
 // Логин
 // app.get('/login', ...)
-
-// Регистрация
-// app.post('/registr', ...)
 
 // Аутентификация
 

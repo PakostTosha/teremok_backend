@@ -132,10 +132,56 @@ export const login = async (req, res) => {
 
 // Аутентификация
 export const auth = async (req, res) => {
-	// Вычленить сам JWT из "Bearer eysmsd..."
-	// Расшифровать JWT токен и попробовать вытащить _id (user._id)
-	// Расшифровка/получение _id не удалось - ответ с ошибкой
-	// Попытки найти пользователя в БД по _id
-	// Найти не удалось - ошибка
-	// Пользователь найден - значит отправить нечувствительные данные о нём, а также - сгенерированный токен
+	try {
+		// Проверить наличие ключа авторизации в заголовках запроса
+		if (!req.headers.authorization) {
+			res.status(400).json({
+				status: "failed",
+				message: "Ошибка аутентификации. Отсутствует заголовок авторизации",
+			});
+		}
+		// Вычленить сам JWT из "Bearer eyJh..."
+		const bearerToken = await req.headers.authorization.split(" ")[1];
+		// Попытка расшифровать JWT токен и попробовать вытащить _id (user._id)
+		let idFromToken;
+		try {
+			idFromToken = await jwt.decode(bearerToken)._id;
+		} catch (err) {
+			// Расшифровка/получение _id не удалось - ответ с ошибкой
+			res.status(400).json({
+				status: "failed",
+				message: "Ошибка аутентификации. Некорректный ключ авторизации",
+			});
+		}
+		// Попытки найти пользователя в БД по _id
+		const user = await userModel.findById({ idFromToken });
+		if (!user) {
+			res.status(400).json({
+				status: "failed",
+				message: "Ошибка аутентификации. Не удалось найти пользователя",
+			});
+		}
+		// Пользователь найден - значит отправить нечувствительные данные о нём, а также - сгенерированный токен
+		const { passwordHash, ...userInfo } = user._doc;
+		const tokenJWT = jwt.sign(
+			{
+				_id: user._id,
+			},
+			secretJwtKey,
+			{
+				expiresIn: "3d",
+			}
+		);
+		return res.json({
+			user: { ...userInfo },
+			tokenJWT,
+			status: "success",
+			message: "Аутентификация прошла успешно!",
+		});
+	} catch (err) {
+		res.status(400).json({
+			status: "failed",
+			message: "Ошибка. Не удалось аутентифицировать пользователя",
+		});
+	}
 };

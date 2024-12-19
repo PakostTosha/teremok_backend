@@ -6,7 +6,7 @@ import {
 	registrValidation,
 	loginValidation,
 } from "./validations/user-validation.js";
-import { registr, login } from "./controllers/user-controller.js";
+import { registr, login, auth } from "./controllers/user-controller.js";
 
 const app = express();
 const apiPort = 4444;
@@ -22,7 +22,7 @@ app.post("/registr", registrValidation, registr);
 // Логин
 app.get("/login", loginValidation, login);
 // Аутентификация
-app.get("/auth");
+app.get("/auth", auth);
 
 // Временный роут
 app.get("/", (req, res) => {

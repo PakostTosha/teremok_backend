@@ -130,58 +130,42 @@ export const login = async (req, res) => {
 	}
 };
 
-// Аутентификация
-export const auth = async (req, res) => {
-	try {
-		// Проверить наличие ключа авторизации в заголовках запроса
-		if (!req.headers.authorization) {
-			res.status(400).json({
-				status: "failed",
-				message: "Ошибка аутентификации. Отсутствует заголовок авторизации",
-			});
-		}
-		// Вычленить сам JWT из "Bearer eyJh..."
-		const bearerToken = await req.headers.authorization.split(" ")[1];
-		// Попытка расшифровать JWT токен и попробовать вытащить _id (user._id)
-		let idFromToken;
+// Аутентификация (проверка токена)
+export const auth = async (req, res, next) => {
+	// Из запроса вычленяем Bearer токен
+	const token = (req.headers.authorization || "").replace(/Bearer\s?/, "");
+	if (token) {
+		// Если токен найден, декодировать id, добавить его в запрос и перейти к выполнению следующей функции
 		try {
-			idFromToken = await jwt.decode(bearerToken)._id;
-		} catch (err) {
-			// Расшифровка/получение _id не удалось - ответ с ошибкой
-			res.status(400).json({
-				status: "failed",
-				message: "Ошибка аутентификации. Некорректный ключ авторизации",
-			});
+			const decoded = jwt.verify(token, secretJwtKey);
+			req.userId = decoded._id;
+			next();
+		} catch (e) {
+			return res.status(403).json({ status: "failed", message: "Нет доступа" });
 		}
-		// Попытки найти пользователя в БД по _id
-		const user = await userModel.findById({ idFromToken });
-		if (!user) {
-			res.status(400).json({
-				status: "failed",
-				message: "Ошибка аутентификации. Не удалось найти пользователя",
-			});
-		}
-		// Пользователь найден - значит отправить нечувствительные данные о нём, а также - сгенерированный токен
-		const { passwordHash, ...userInfo } = user._doc;
-		const tokenJWT = jwt.sign(
-			{
-				_id: user._id,
-			},
-			secretJwtKey,
-			{
-				expiresIn: "3d",
-			}
-		);
-		return res.json({
-			user: { ...userInfo },
-			tokenJWT,
-			status: "success",
-			message: "Аутентификация прошла успешно!",
-		});
-	} catch (err) {
-		res.status(400).json({
+	} else {
+		return res
+			.status(403)
+			.json({ status: "failed", message: "Доступ отсутствует" });
+	}
+};
+
+// Получение данных пользователя
+export const getProfileInfo = async (req, res) => {
+	// Перед вызовом данной функции необходимо вызвать функцию "auth" для получения id
+	const user = await userModel.findById(req.userId);
+
+	if (!user) {
+		return res.status(400).json({
 			status: "failed",
-			message: "Ошибка. Не удалось аутентифицировать пользователя",
+			message: "Пользователь не найден",
 		});
 	}
+
+	const { passwordHash, ...profileInfo } = user._doc;
+	res.json({
+		user: profileInfo,
+		status: "success",
+		message: "Данные пользователя получены успешно!",
+	});
 };

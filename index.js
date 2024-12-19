@@ -6,7 +6,12 @@ import {
 	registrValidation,
 	loginValidation,
 } from "./validations/user-validation.js";
-import { registr, login, auth } from "./controllers/user-controller.js";
+import {
+	registr,
+	login,
+	auth,
+	getProfileInfo,
+} from "./controllers/user-controller.js";
 
 const app = express();
 const apiPort = 4444;
@@ -21,13 +26,10 @@ app.use(cors());
 app.post("/registr", registrValidation, registr);
 // Логин
 app.get("/login", loginValidation, login);
+// Запрос данных авторизированного пользователя
+app.get("/profile", auth, getProfileInfo);
 // Аутентификация
 app.get("/auth", auth);
-
-// Временный роут
-app.get("/", (req, res) => {
-	res.send("Hello world!");
-});
 
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 

@@ -3,6 +3,9 @@ import bcrypt from "bcrypt";
 import { validationResult } from "express-validator";
 import jwt from "jsonwebtoken";
 
+// Секретный/приватный ключ для генерации JWT-токена
+const secretJwtKey = "Teremok_BE";
+
 // Регистрация
 export const registr = async (req, res) => {
 	try {
@@ -13,7 +16,11 @@ export const registr = async (req, res) => {
 		// Валидирование данных при помощи express-validator
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
-			return res.status(400).json(errors.array());
+			return res.status(400).json({
+				status: "failed",
+				message: "Неправильно введены данные",
+				errors: errors.array(),
+			});
 		}
 
 		// Хэширование пароля
@@ -33,8 +40,6 @@ export const registr = async (req, res) => {
 		// Попытка сохранить пользователя в mongodb (асинхронное действие)
 		const user = await newUserDoc.save();
 
-		// Секретный/приватный ключ для генерации JWT-токена
-		const secretJwtKey = "Teremok_BE";
 		// Генерация JWT-токена с id пользователя в БД
 		const tokenJWT = jwt.sign(
 			{
@@ -49,20 +54,88 @@ export const registr = async (req, res) => {
 		// Ответ успешной регистрации
 		const { passwordHash, ...userInfo } = user._doc;
 		res.json({
-			...userInfo,
+			user: { ...userInfo },
 			tokenJWT,
 			status: "completed",
+			message: "Регистрация прошла успешно!",
 		});
 	} catch (err) {
 		console.log(err);
 		res.status(400).json({
+			status: "failed",
 			message: "Не удалось зарегистрировать пользователя",
 		});
 	}
 };
 
 // Авторизация
-// export const login =
+export const login = async (req, res) => {
+	try {
+		// Получаем введённые данные
+		const { email, password } = req.body;
+
+		// Проверяем их на валидность
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({
+				status: "failed",
+				message: "Неправильно введены данные",
+				errors: errors.array(),
+			});
+		}
+
+		// Поиск по email из бд
+		const user = await userModel.findOne({ email });
+
+		// Если пользователь не найден - завершить процесс авторизации
+		if (!user) {
+			return res.status(400).json({
+				status: "failed",
+				message: "Неверный логин или пароль. Проверьте введённые данные",
+			});
+		}
+
+		// Проверить хэш введённого пароля с хэшем пароля из документа найденного пользователя
+		const checkPassword = await bcrypt.compare(password, user.passwordHash);
+		if (!checkPassword) {
+			return res.status(400).json({
+				status: "failed",
+				message: "Неверный логин или пароль. Проверьте введённые данные",
+			});
+		}
+
+		// Логин и пароль корректны
+		const { passwordHash, ...userInfo } = user._doc;
+		// Генерация JWT-токена с id пользователя в БД
+		const tokenJWT = jwt.sign(
+			{
+				_id: user._id,
+			},
+			secretJwtKey,
+			{
+				expiresIn: "3d",
+			}
+		);
+		return res.json({
+			user: { ...userInfo },
+			tokenJWT,
+			status: "success",
+			message: "Авторизация прошла успешно!",
+		});
+	} catch (err) {
+		console.log(err);
+		res
+			.status(400)
+			.json({ status: "failed", message: "Не удалось авторизоваться" });
+	}
+};
 
 // Аутентификация
-// export const auth
+export const auth = async (req, res) => {
+	// Вычленить сам JWT из "Bearer eysmsd..."
+	// Расшифровать JWT токен и попробовать вытащить _id (user._id)
+	// Расшифровка/получение _id не удалось - ответ с ошибкой
+	// Попытки найти пользователя в БД по _id
+	// Найти не удалось - ошибка
+	// Пользователь найден - значит отправить нечувствительные данные о нём, а также - сгенерированный токен
+};

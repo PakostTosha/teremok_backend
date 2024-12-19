@@ -22,3 +22,10 @@ export const registrValidation = [
 ];
 
 // Валидация данных авторизации
+export const loginValidation = [
+	// email, password
+	body("email", "Неверный формат почты").isEmail(),
+	body("password", "Передайте строку больше 5 и меньше 50 символов")
+		.isString()
+		.isLength({ min: 6, max: 50 }),
+];

@@ -139,6 +139,7 @@ export const auth = async (req, res, next) => {
 		try {
 			const decoded = jwt.verify(token, secretJwtKey);
 			req.userId = decoded._id;
+			// return res.json({ msg: "auth is succes" });
 			next();
 		} catch (e) {
 			return res.status(403).json({ status: "failed", message: "Нет доступа" });

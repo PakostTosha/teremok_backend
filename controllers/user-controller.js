@@ -139,7 +139,6 @@ export const auth = async (req, res, next) => {
 		try {
 			const decoded = jwt.verify(token, secretJwtKey);
 			req.userId = decoded._id;
-			// return res.json({ msg: "auth is succes" });
 			next();
 		} catch (e) {
 			return res.status(403).json({ status: "failed", message: "Нет доступа" });
@@ -153,7 +152,7 @@ export const auth = async (req, res, next) => {
 
 // Получение данных пользователя
 export const getProfileInfo = async (req, res) => {
-	// Перед вызовом данной функции необходимо вызвать функцию "auth" для получения id
+	// Перед вызовом данной функции необходимо вызвать функцию "auth" для получения id в параметрах запроса
 	const user = await userModel.findById(req.userId);
 
 	if (!user) {
@@ -171,5 +170,26 @@ export const getProfileInfo = async (req, res) => {
 	});
 };
 
-// Создание записи о ребёнке
-export const addChild = async (req, res) => {};
+// Сохранение измененных данных авторизованного пользователя
+export const changeProfileInfo = async (req, res) => {
+	try {
+		// Находим юзера по Id из "auth"
+		const user = await userModel.findById(req.userId);
+		await userModel.updateOne(user, {
+			email: req.body.email, // email
+			firstName: req.body.firstName, // firstName
+			lastName: req.body.lastName, // lastName
+			patronymic: req.body.patronymic, // patronymic
+			avatarUrl: req.body.avatarUrl, // avatarUrl
+			childrens: req.body.childrens, // childrens
+			// $set: {telephone: req.body.telephone} // telephone
+			// $set добавляет поле в документ, если такого поля не существует
+		});
+		res.json({ success: true, message: "Ваши данные успешно обновлены" });
+	} catch (error) {
+		return res.status(400).json({
+			status: "failed",
+			message: "Не удалось обновить данные пользователя",
+		});
+	}
+};

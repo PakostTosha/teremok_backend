@@ -4,6 +4,7 @@ import {
 	login,
 	auth,
 	getProfileInfo,
+	changeProfileInfo,
 } from "../controllers/user-controller.js";
 import {
 	registrValidation,
@@ -21,7 +22,7 @@ userRouter.get("/auth", auth);
 // Запрос данных авторизированного пользователя
 userRouter.get("/profile", auth, getProfileInfo);
 // Сохранение измененных данных авторизованного пользователя
-// userRouter.post("/changeProfile", auth, changeProfileInfo)
+userRouter.post("/changeProfile", auth, changeProfileInfo);
 
 // Создание записи о ребёнке
 // Удаление записи о ребёнке

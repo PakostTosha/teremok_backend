@@ -170,3 +170,6 @@ export const getProfileInfo = async (req, res) => {
 		message: "Данные пользователя получены успешно!",
 	});
 };
+
+// Создание записи о ребёнке
+export const addChild = async (req, res) => {};

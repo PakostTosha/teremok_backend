@@ -2,19 +2,8 @@ import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
 
-const UserSchema = new Schema(
+const ChildSchema = new Schema(
 	{
-		// Почта
-		email: {
-			type: String,
-			required: [true, "email is required"],
-			unique: true,
-		},
-		// Хэшированный пароль
-		passwordHash: {
-			type: String,
-			required: [true, "password is required"],
-		},
 		// Имя
 		firstName: {
 			type: String,
@@ -25,23 +14,16 @@ const UserSchema = new Schema(
 		// Фамилия
 		lastName: {
 			type: String,
-			required: true,
+			required: [true, "lastName is required"],
 			min: [2, "lastName must contain more than 2 characters"],
 			max: [50, "lastName must contain less than 50 characters"],
 		},
-		// Отчество (опицонально)
+		// Отчество
 		patronymic: {
 			type: String,
+			required: [true, "patronymic is required"],
 			min: [2, "patronymic must contain more than 2 characters"],
 			max: [50, "patronymic must contain less than 50 characters"],
-		},
-		// Аватарка (опционально)
-		avatarUrl: {
-			type: String,
-		},
-		// Дети (добавляются после регистрации пользователя)
-		childrens: {
-			type: Array,
 		},
 	},
 	// Автообновляющиеся параметры
@@ -50,4 +32,4 @@ const UserSchema = new Schema(
 	}
 );
 
-export default mongoose.model("Users", UserSchema);
+export default mongoose.model("Child", ChildSchema);

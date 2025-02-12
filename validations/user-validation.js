@@ -1,10 +1,16 @@
 import { body } from "express-validator";
+import userModel from "../models/user-model.js";
 
 // Валидация данных регистрации
 export const registrValidation = [
 	// Валидация данных из тела запроса
 	// email, password, firstName, lastName, patronymic, avatarUrl
-	body("email", "Неверный формат почты").isEmail(),
+	body("email", "Неверный формат почты")
+		.isEmail()
+		.custom(async (value) => {
+			await userModel.findOne({ email: value });
+			return await Promise.reject("Введите другую почту");
+		}),
 	body("password", "Передайте строку больше 5 и меньше 50 символов")
 		.isString()
 		.isLength({ min: 6, max: 50 }),
@@ -17,7 +23,7 @@ export const registrValidation = [
 	body("patronymic", "Передайте строку от 2 до 50 символов")
 		.isString()
 		.isLength({ min: 2, max: 50 })
-		.optional(),
+		.optional({ nullable: true, checkFalsy: true }),
 	body("avatarUrl").isString().optional(),
 ];
 

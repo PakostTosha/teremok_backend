@@ -40,8 +40,14 @@ const UserSchema = new Schema(
 			type: String,
 		},
 		// Дети (добавляются после регистрации пользователя)
-		childrens: {
-			type: Array,
+		childrens: [
+			{
+				type: mongoose.Schema.ObjectId,
+				ref: "Child",
+			},
+		],
+		telephone: {
+			type: String,
 		},
 	},
 	// Автообновляющиеся параметры

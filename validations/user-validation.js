@@ -35,3 +35,22 @@ export const loginValidation = [
 		.isString()
 		.isLength({ min: 6, max: 50 }),
 ];
+
+// Валидация обновлённых данных
+export const updateProfileValidation = [
+	// Валидация данных из тела запроса
+	// email, password, firstName, lastName, patronymic, avatarUrl
+	body("firstName", "Передайте строку от 2 до 50 символов")
+		.isString()
+		.isLength({ min: 2, max: 50 }),
+	body("lastName", "Передайте строку от 2 до 50 символов")
+		.isString()
+		.isLength({ min: 2, max: 50 }),
+	body("patronymic", "Передайте строку от 2 до 50 символов")
+		.isString()
+		.isLength({ min: 2, max: 50 })
+		.optional({ nullable: true, checkFalsy: true }),
+	body("telephone").optional().isMobilePhone("ru-RU"),
+	body("avatarUrl").isString().optional(),
+	body("childrens").optional(),
+];

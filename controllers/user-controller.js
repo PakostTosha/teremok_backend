@@ -13,16 +13,6 @@ export const registr = async (req, res) => {
 		const { email, password, firstName, lastName, patronymic, avatarUrl } =
 			req.body;
 
-		// Валидирование данных при помощи express-validator
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.status(400).json({
-				status: "failed",
-				message: "Неправильно введены данные",
-				errors: errors.array(),
-			});
-		}
-
 		// Хэширование пароля
 		const salt = await bcrypt.genSalt(10);
 		const pswrdHash = await bcrypt.hash(password, salt);
@@ -74,18 +64,8 @@ export const login = async (req, res) => {
 		// Получаем введённые данные
 		const { email, password } = req.body;
 
-		// Проверяем их на валидность
-		const errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.status(400).json({
-				status: "failed",
-				message: "Неправильно введены данные",
-				errors: errors.array(),
-			});
-		}
-
 		// Поиск по email из бд
-		const user = await userModel.findOne({ email });
+		const user = await userModel.findOne({ email }).populate("childrens");
 
 		// Если пользователь не найден - завершить процесс авторизации
 		if (!user) {
@@ -153,7 +133,7 @@ export const auth = async (req, res, next) => {
 // Получение данных пользователя
 export const getProfileInfo = async (req, res) => {
 	// Перед вызовом данной функции необходимо вызвать функцию "auth" для получения id в параметрах запроса
-	const user = await userModel.findById(req.userId);
+	const user = await userModel.findById(req.userId).populate("childrens");
 
 	if (!user) {
 		return res.status(400).json({
@@ -173,20 +153,40 @@ export const getProfileInfo = async (req, res) => {
 // Сохранение измененных данных авторизованного пользователя
 export const changeProfileInfo = async (req, res) => {
 	try {
-		// Находим юзера по Id из "auth"
-		const user = await userModel.findById(req.userId);
-		await userModel.updateOne(user, {
-			email: req.body.email, // email
+		// Вытаскиваем обновлённые данные из запроса
+		const updatedUser = {
 			firstName: req.body.firstName, // firstName
 			lastName: req.body.lastName, // lastName
 			patronymic: req.body.patronymic, // patronymic
 			avatarUrl: req.body.avatarUrl, // avatarUrl
-			childrens: req.body.childrens, // childrens
-			// $set: {telephone: req.body.telephone} // telephone
-			// $set добавляет поле в документ, если такого поля не существует
-		});
-		res.json({ success: true, message: "Ваши данные успешно обновлены" });
+			telephone: req.body.telephone, //telephone
+		};
+
+		// Вытаскиваем ID пользователя из запроса после выполнения middleware "auth"
+		const userId = req.userId;
+		// Обновляем запись пользователя. В качестве "фильтра" для обновления передаём ID
+		const updateResult = await userModel.updateOne(
+			{ _id: userId },
+			{ $set: updatedUser }
+		);
+
+		// Результат обновления
+		console.log(updateResult);
+
+		if (updateResult.modifiedCount > 0) {
+			res.json({
+				success: true,
+				message: "Ваши данные успешно обновлены",
+				updateResult,
+			});
+		} else {
+			res.status(400).json({
+				success: false,
+				message: "Не удалось обновить данные пользователя",
+			});
+		}
 	} catch (error) {
+		console.error("Ошибка при обновлении данных пользователя", error);
 		return res.status(400).json({
 			status: "failed",
 			message: "Не удалось обновить данные пользователя",

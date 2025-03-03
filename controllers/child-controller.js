@@ -81,13 +81,9 @@ export const changeChildInfo = async (req, res) => {
 export const deleteChild = async (req, res) => {
 	try {
 		const childId = req.params.id;
-		const foundedChild = await childModel.findById(
-			mongoose.Types.mongoose.Types.ObjectId(childId)
-		);
-		console.log({ childId, foundedChild });
-		// const deleteResult = await childModel.findByIdAndDelete(childId);
+		const deleteResult = await childModel.findByIdAndDelete(childId);
 
-		if (!deleteResult)
+		if (deleteResult)
 			res.json({
 				success: true,
 				message: "Запись о ребёнке успешно удалена",

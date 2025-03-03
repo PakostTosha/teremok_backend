@@ -170,9 +170,6 @@ export const changeProfileInfo = async (req, res) => {
 			{ $set: updatedUser }
 		);
 
-		// Результат обновления
-		console.log(updateResult);
-
 		if (updateResult.modifiedCount > 0) {
 			res.json({
 				success: true,

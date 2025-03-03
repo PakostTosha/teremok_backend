@@ -50,7 +50,9 @@ export const updateProfileValidation = [
 		.isString()
 		.isLength({ min: 2, max: 50 })
 		.optional({ nullable: true, checkFalsy: true }),
-	body("telephone").optional().isMobilePhone("ru-RU"),
+	body("telephone")
+		.optional({ nullable: true, checkFalsy: true })
+		.isMobilePhone("ru-RU"),
 	body("avatarUrl").isString().optional(),
 	body("childrens").optional(),
 ];

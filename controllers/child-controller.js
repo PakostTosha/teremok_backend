@@ -1,5 +1,6 @@
 import childModel from "../models/child-model.js";
 import userModel from "../models/user-model.js";
+import mongoose from "mongoose";
 
 // Регистрация нового ребёнка
 export const addChild = async (req, res) => {
@@ -80,8 +81,11 @@ export const changeChildInfo = async (req, res) => {
 export const deleteChild = async (req, res) => {
 	try {
 		const childId = req.params.id;
-
-		const deleteResult = await childModel.findByIdAndDelete(childId);
+		const foundedChild = await childModel.findById(
+			mongoose.Types.mongoose.Types.ObjectId(childId)
+		);
+		console.log({ childId, foundedChild });
+		// const deleteResult = await childModel.findByIdAndDelete(childId);
 
 		if (!deleteResult)
 			res.json({

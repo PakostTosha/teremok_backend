@@ -3,9 +3,10 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import db from "./db/index.js";
 import userRouter from "./routes/user-router.js";
+import "dotenv/config";
 
 const app = express();
-const apiPort = 4444;
+const apiPort = process.env.PORT || 4444;
 
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 

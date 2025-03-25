@@ -8,12 +8,14 @@ export const registrValidation = [
 	body("email", "Неверный формат почты")
 		.isEmail()
 		.custom(async (value) => {
-			await userModel.findOne({ email: value });
-			return await Promise.reject("Введите другую почту");
+			const user = await userModel.findOne({ email: value });
+			if (user) {
+				return await Promise.reject("Введите другую почту");
+			}
 		}),
-	body("password", "Передайте строку больше 5 и меньше 50 символов")
+	body("password", "Передайте строку больше 4 и меньше 50 символов")
 		.isString()
-		.isLength({ min: 6, max: 50 }),
+		.isLength({ min: 5, max: 50 }),
 	body("firstName", "Передайте строку от 2 до 50 символов")
 		.isString()
 		.isLength({ min: 2, max: 50 }),
@@ -33,7 +35,7 @@ export const loginValidation = [
 	body("email", "Неверный формат почты").isEmail(),
 	body("password", "Передайте строку больше 5 и меньше 50 символов")
 		.isString()
-		.isLength({ min: 6, max: 50 }),
+		.isLength({ min: 5, max: 50 }),
 ];
 
 // Валидация обновлённых данных

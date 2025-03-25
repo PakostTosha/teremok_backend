@@ -55,11 +55,6 @@ userRouter.patch(
 	changeChildInfo
 );
 // Удаление записи о ребёнке
-userRouter.delete("/deleteChild/:id", auth, deleteChild);
-
-// Добавление карточек ребёнку?
-
-// Либо хранить карточки на сервере и получать их при запросе (тогда карточки можно изменять динамически)
-// Либо заранее хранить карточки в папке на фронте, запоминать номер/id и затем взаимодействовать через это
+userRouter.delete("/deleteChild/:id/:parent", auth, deleteChild);
 
 export default userRouter;

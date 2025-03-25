@@ -81,19 +81,36 @@ export const changeChildInfo = async (req, res) => {
 export const deleteChild = async (req, res) => {
 	try {
 		const childId = req.params.id;
-		const deleteResult = await childModel.findByIdAndDelete(childId);
+		const parentId = req.params.parent;
 
-		if (deleteResult)
-			res.json({
-				success: true,
-				message: "Запись о ребёнке успешно удалена",
-			});
-		else {
-			res.status(400).json({
-				success: false,
-				message: "Во время удаления записи о ребёнке возник сбой",
-			});
+		const deleteResultChild = await childModel.findByIdAndDelete(childId);
+
+		if (!deleteResultChild) {
+			throw new Error("Ребёнок не найден");
 		}
+
+		const deleteResultFromParent = await userModel.findByIdAndUpdate(
+			parentId,
+			{
+				$pull: { childrens: childId },
+			},
+			{ new: true }
+		);
+
+		if (!deleteResultFromParent) {
+			throw new Error("Родитель не найден");
+		}
+
+		res.json({
+			success: true,
+			message: "Запись о ребёнке успешно удалена",
+		});
+		// else {
+		// 	res.status(400).json({
+		// 		success: false,
+		// 		message: "Во время удаления записи о ребёнке возник сбой",
+		// 	});
+		// }
 	} catch (err) {
 		console.error(err);
 		res.status(500).json({
